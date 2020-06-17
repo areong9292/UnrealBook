@@ -16,6 +16,8 @@ AFountain::AFountain()
 	Light = CreateDefaultSubobject<UPointLightComponent>(TEXT("LIGHT"));
 	Splash = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("SPLASH"));
 
+	Movement = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("MOVEMENT"));
+
 	// 루트 컴포넌트로 Body 지정, Body밑에 Water를 자식으로 붙힘
 	RootComponent = Body;
 	Water->SetupAttachment(Body);
@@ -59,19 +61,44 @@ AFountain::AFountain()
 		// SetStaticMesh에 에셋의 포인터(SM_BODY.Object)를 전달한다
 		Splash->SetTemplate(PS_SLASH.Object);
 	}
+
+	// 회전 기본값
+	RotateSpeed = 30.0f;
+
+	// tick 대신 무브먼트 컴포넌트로 회전시킨다
+	// 액터의 현재 위치와 관계없이 지정된 움직임을 주어야하므로
+	// 다른 컴포넌트들과는 독립적으로 액터에 부착된다
+	Movement->RotationRate = FRotator(0.0f, RotateSpeed, 0.0f);
 }
 
 // Called when the game starts or when spawned
 void AFountain::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	ABLOG_S(Warning);
+	ABLOG(Warning, TEXT("Actor Name : %s, ID : %d, Location X : %.3f"), *GetName(), ID, GetActorLocation().X);
+}
+
+// 액터 소멸(메모리에서 소멸) 시 호출
+void AFountain::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	ABLOG_S(Warning);
+}
+
+// 액터에 속한 모든 컴포넌트가 셋팅 된 후 호출
+void AFountain::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	ABLOG_S(Warning);
 }
 
 // Called every frame
-void AFountain::Tick(float DeltaTime)
+/*void AFountain::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	AddActorLocalRotation(FRotator(0.0f, RotateSpeed * DeltaTime, 0.0f));
 
-}
+}*/
 
