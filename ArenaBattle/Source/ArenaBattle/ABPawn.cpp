@@ -48,13 +48,32 @@ AABPawn::AABPawn()
 		// SetSkeletalMesh에 에셋의 포인터(SK_CARDBOARD.Object)를 전달한다
 		Mesh->SetSkeletalMesh(SK_CARDBOARD.Object);
 	}
+
+	// 애니메이션 블루프린트로 애니메이션 실행
+	Mesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+	static ConstructorHelpers::FClassFinder<UAnimInstance> WARRIOR_ANIM(TEXT("/Game/Book/Animations/WarriorAnimBlueprint.WarriorAnimBlueprint_C"));
+	if (WARRIOR_ANIM.Succeeded())
+	{
+		Mesh->SetAnimInstanceClass(WARRIOR_ANIM.Class);
+	}
 }
 
 // Called when the game starts or when spawned
 void AABPawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	/*
+	// LoadObject - 게임 실행 중에 애셋을 로드한다
+	Mesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+	UAnimationAsset* AnimAsset = LoadObject<UAnimationAsset>(nullptr, TEXT("/Game/Book/Animations/WarriorRun.WarriorRun"));
 	
+	// 달리기 애니메이션을 실행한다
+	if (AnimAsset != nullptr)
+	{
+		Mesh->PlayAnimation(AnimAsset, true);
+	}
+	*/
 }
 
 // Called every frame
@@ -97,5 +116,6 @@ void AABPawn::UpDown(float NewAxisValue)
 void AABPawn::LeftRight(float NewAxisValue)
 {
 	//ABLOG(Warning, TEXT("%f"), NewAxisValue);
-	AddMovementInput(GetActorForwardVector(), NewAxisValue);
+	//GetActorForwardVector - 액터의 우측방향 벡터
+	AddMovementInput(GetActorRightVector(), NewAxisValue);
 }
