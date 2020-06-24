@@ -16,45 +16,51 @@ AABPawn::AABPawn()
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SPRINGARM"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("CAMERA"));
 
-	// 움직임을 담당할 캡슐 컴포넌트를 루트로 지정
-	RootComponent = Capsule;
-
-	// 다른 컴포넌트들은 캡슐 밑에 붙힌다
-	Mesh->SetupAttachment(Capsule);
-	SpringArm->SetupAttachment(Capsule);
-
-	// 카메라는 스프링 암 밑에 붙힌다
-	Camera->SetupAttachment(SpringArm);
-
-	// 캐릭터가 캡슐 안으로 들어올 수 있도록 캐릭터 절반 높이 88, 몸둘레 34로 캡슐 셋팅
-	Capsule->SetCapsuleHalfHeight(88.0f);
-	Capsule->SetCapsuleRadius(34.0f);
-
-	// 캡슐은 가운데 기준, 리소스는 발 기준이기 때문에 절반 정도 위치 수정
-	// 회전은 언리얼 엔진과 리소스 만든 좌표계가 달라서 -90도 돌려서 맞춰줌
-	Mesh->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -88.0f), FRotator(0.0f, -90.0f, 0.0f));
-
-	// 스프링암 길이 400, x축으로 -15도 돌려서 위에서 대각선으로 바라보게 함
-	SpringArm->TargetArmLength = 400.0f;
-	SpringArm->SetRelativeRotation(FRotator(-15.0f, 0.0f, 0.0f));
-
-	// 에셋 경로로 에셋 부르기
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh>
-		SK_CARDBOARD(TEXT("/Game/InfinityBladeWarriors/Character/CompleteCharacters/SK_CharM_Cardboard"));
-
-	// 부르기 성공했으면
-	if (SK_CARDBOARD.Succeeded())
+	if (Capsule != NULL && Mesh != NULL && Movement != NULL && SpringArm != NULL && Camera != NULL)
 	{
-		// SetSkeletalMesh에 에셋의 포인터(SK_CARDBOARD.Object)를 전달한다
-		Mesh->SetSkeletalMesh(SK_CARDBOARD.Object);
-	}
+		// 움직임을 담당할 캡슐 컴포넌트를 루트로 지정
+		RootComponent = Capsule;
 
-	// 애니메이션 블루프린트로 애니메이션 실행
-	Mesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
-	static ConstructorHelpers::FClassFinder<UAnimInstance> WARRIOR_ANIM(TEXT("/Game/Book/Animations/WarriorAnimBlueprint.WarriorAnimBlueprint_C"));
-	if (WARRIOR_ANIM.Succeeded())
-	{
-		Mesh->SetAnimInstanceClass(WARRIOR_ANIM.Class);
+		// 다른 컴포넌트들은 캡슐 밑에 붙힌다
+		Mesh->SetupAttachment(Capsule);
+		SpringArm->SetupAttachment(Capsule);
+
+		// 카메라는 스프링 암 밑에 붙힌다
+		Camera->SetupAttachment(SpringArm);
+
+		// 캐릭터가 캡슐 안으로 들어올 수 있도록 캐릭터 절반 높이 88, 몸둘레 34로 캡슐 셋팅
+		Capsule->SetCapsuleHalfHeight(88.0f);
+		Capsule->SetCapsuleRadius(34.0f);
+
+		// 캡슐은 가운데 기준, 리소스는 발 기준이기 때문에 절반 정도 위치 수정
+		// 회전은 언리얼 엔진과 리소스 만든 좌표계가 달라서 -90도 돌려서 맞춰줌
+		Mesh->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -88.0f), FRotator(0.0f, -90.0f, 0.0f));
+
+		// 스프링암 길이 400, x축으로 -15도 돌려서 위에서 대각선으로 바라보게 함
+		SpringArm->TargetArmLength = 400.0f;
+		SpringArm->SetRelativeRotation(FRotator(-15.0f, 0.0f, 0.0f));
+
+		// 에셋 경로로 에셋 부르기
+		static ConstructorHelpers::FObjectFinder<USkeletalMesh>
+			SK_CARDBOARD(TEXT("/Game/InfinityBladeWarriors/Character/CompleteCharacters/SK_CharM_Cardboard"));
+
+		// 부르기 성공했으면
+		if (SK_CARDBOARD.Succeeded())
+		{
+			// SetSkeletalMesh에 에셋의 포인터(SK_CARDBOARD.Object)를 전달한다
+			Mesh->SetSkeletalMesh(SK_CARDBOARD.Object);
+		}
+
+		// 애니메이션 블루프린트로 애니메이션 실행
+		Mesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+		static ConstructorHelpers::FClassFinder<UAnimInstance> WARRIOR_ANIM(TEXT("/Game/Book/Animations/WarriorAnimBlueprint.WarriorAnimBlueprint_C"));
+		if (WARRIOR_ANIM.Succeeded())
+		{
+			// 스켈레탈 메시 컴포넌트의 애님 인스턴스 속성에
+			// 애니메이션 블루프린트의 클래스 정보를 지정한다
+			// 애님 인스턴스 보고 이 애니메이션 블루프린트를 실행해라고 하는 것
+			Mesh->SetAnimInstanceClass(WARRIOR_ANIM.Class);
+		}
 	}
 }
 
