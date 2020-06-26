@@ -31,19 +31,19 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 
 	UPROPERTY(VisibleAnywhere, Category = Collision)
-		UCapsuleComponent* Capsule = nullptr;
+		UCapsuleComponent* Capsule = NULL;
 
 	UPROPERTY(VisibleAnywhere, Category = Visual)
-		USkeletalMeshComponent* Mesh = nullptr;
+		USkeletalMeshComponent* Mesh = NULL;
 
 	UPROPERTY(VisibleAnywhere, Category = Movement)
-		UFloatingPawnMovement* Movement = nullptr;
+		UFloatingPawnMovement* Movement = NULL;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-		USpringArmComponent* SpringArm = nullptr;
+		USpringArmComponent* SpringArm = NULL;
 
 	UPROPERTY(VisibleAnywhere, Category = Collision)
-		UCameraComponent* Camera = nullptr;
+		UCameraComponent* Camera = NULL;
 
 private:
 	void UpDown(float NewAxisValue);
