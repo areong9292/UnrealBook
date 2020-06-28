@@ -51,6 +51,13 @@ AABCharacter::AABCharacter()
 			GetMesh()->SetAnimInstanceClass(WARRIOR_ANIM.Class);
 		}
 	}
+
+	// 컨트롤 모드를 디아블로 모드로 변경
+	SetControlMode(EControlMode::DIABLO);
+
+	// 길이, 회전 변화 속도 지정
+	ArmLengthSpeed = 3.0f;
+	ArmRotationSpeed = 3.0f;
 }
 
 // Called when the game starts or when spawned
@@ -60,10 +67,107 @@ void AABCharacter::BeginPlay()
 	
 }
 
+void AABCharacter::SetControlMode(EControlMode NewControlMode)
+{
+	CurrentControlMode = NewControlMode;
+
+	if (SpringArm != NULL)
+	{
+		switch(CurrentControlMode)
+		{
+			case EControlMode::GTA:
+				//SpringArm->TargetArmLength = 450.0f;
+				//SpringArm->SetRelativeRotation(FRotator::ZeroRotator);
+				// 스프링 암 길이를 450으로 지정
+				ArmLengthTo = 450.0f;
+
+				// 플레이어 컨트롤러와 같은 회전 값을 가지도록 함
+				SpringArm->bUsePawnControlRotation = true;
+				SpringArm->bInheritPitch = true;
+				SpringArm->bInheritRoll = true;
+				SpringArm->bInheritYaw = true;
+
+				// 카메라를 장애물 앞으로 줌인
+				SpringArm->bDoCollisionTest = true;
+
+				// 기본적으로 컨트롤러의 yaw회전과 폰의 yaw 회전은 연동되어있다
+				// false 이므로 컨트롤러만 움직인다
+				bUseControllerRotationYaw = false;
+
+				// 캐릭터가 움직이는 방향으로 캐릭터를 자동으로 회전시킨다
+				GetCharacterMovement()->bOrientRotationToMovement = true;
+
+				// 회전속도
+				GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f);
+
+				// 부드럽게 회전 여부
+				GetCharacterMovement()->bUseControllerDesiredRotation = false;
+
+				break;
+
+			case EControlMode::DIABLO:
+				//SpringArm->TargetArmLength = 800.0f;
+				//SpringArm->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+				// 스프링 암 길이를 450으로 지정
+				// 스프링 암 회전 값을 x축으로 -45도 지정
+				ArmLengthTo = 800.0f;
+				ArmRotationTo = FRotator(-45.0f, 0.0f, 0.0f);
+
+				SpringArm->bUsePawnControlRotation = false;
+				SpringArm->bInheritPitch = false;
+				SpringArm->bInheritRoll = false;
+				SpringArm->bInheritYaw = false;
+
+				SpringArm->bDoCollisionTest = false;
+
+				bUseControllerRotationYaw = false;
+
+				// 캐릭터가 움직이는 방향으로 캐릭터를 자동으로 회전시킨다
+				GetCharacterMovement()->bOrientRotationToMovement = false;
+
+				// 회전속도
+				GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f);
+
+				// 부드럽게 회전 여부
+				GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
+				break;
+		}
+	}
+}
+
 // Called every frame
 void AABCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// 매 틱마다 스프링 암의 길이를 모드 변경에 맞게 수정해준다
+	SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, ArmLengthTo, DeltaTime, ArmLengthSpeed);
+
+	// 현재 모드가 디아블로 일 경우, 회전도 수정해준다
+	switch (CurrentControlMode)
+	{
+	case EControlMode::DIABLO:
+		SpringArm->SetRelativeRotation(FMath::RInterpTo(SpringArm->RelativeRotation, ArmRotationTo, DeltaTime, ArmRotationSpeed));
+		break;
+	}
+
+	switch (CurrentControlMode)
+	{
+	case EControlMode::GTA:
+		break;
+	case EControlMode::DIABLO:
+		// SizeSquared - 해당 벡터의 길이 구하기
+		// 벡터 길이가 0보다 크면
+		if (DirectionToMove.SizeSquared() > 0.0f)
+		{
+			// 컨트롤러의 회전 값을 해당 벡터 x로부터 회전 행렬 가져온 값으로 지정한다
+			GetController()->SetControlRotation(FRotationMatrix::MakeFromX(DirectionToMove).Rotator());
+
+			AddMovementInput(DirectionToMove);
+		}
+		break;
+	}
 
 }
 
@@ -77,27 +181,73 @@ void AABCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AABCharacter::LookUp);
 	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AABCharacter::Turn);
+
+	// IE_Pressed - 눌렸을 경우 호출
+	PlayerInputComponent->BindAction(TEXT("ViewChange"), EInputEvent::IE_Pressed, this, &AABCharacter::ViewChange);
 }
 
 void AABCharacter::UpDown(float NewAxisValue)
 {
-	//GetActorForwardVector - 액터의 전진방향 벡터
-	AddMovementInput(GetActorForwardVector(), NewAxisValue);
+	switch (CurrentControlMode)
+	{
+	case EControlMode::GTA:
+		// FRotationMatrix(GetControlRotation()) - 컨트롤의 회전 행렬을 가져온다
+		// .GetUnitAxis(EAxis::X) X값을 가져와서 해당 축의 normal 벡터를 가져온다
+		AddMovementInput(FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::X), NewAxisValue);
+		break;
+	case EControlMode::DIABLO:
+		DirectionToMove.X = NewAxisValue;
+		break;
+	}
 }
 
 void AABCharacter::LeftRight(float NewAxisValue)
 {
-	//GetActorForwardVector - 액터의 우측방향 벡터
-	AddMovementInput(GetActorRightVector(), NewAxisValue);
+	switch (CurrentControlMode)
+	{
+	case EControlMode::GTA:
+		AddMovementInput(FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::Y), NewAxisValue);
+		break;
+	case EControlMode::DIABLO:
+		DirectionToMove.Y = NewAxisValue;
+		break;
+	}
 }
 
 void AABCharacter::LookUp(float NewAxisValue)
 {
-	AddControllerPitchInput(NewAxisValue);
+	switch (CurrentControlMode)
+	{
+	case EControlMode::GTA:
+		AddControllerPitchInput(NewAxisValue);
+		break;
+	}
 }
 
 void AABCharacter::Turn(float NewAxisValue)
 {
-	AddControllerYawInput(NewAxisValue);
+	switch (CurrentControlMode)
+	{
+	case EControlMode::GTA:
+		AddControllerYawInput(NewAxisValue);
+		break;
+	}
+}
+
+void AABCharacter::ViewChange()
+{
+	switch (CurrentControlMode)
+	{
+	case EControlMode::GTA:
+		// 컨트롤러의 회전을 액터의 회전 값(캐릭터 회전 값으로 지정)
+		GetController()->SetControlRotation(GetActorRotation());
+		SetControlMode(EControlMode::DIABLO);
+		break;
+	case EControlMode::DIABLO:
+		// 컨트롤러의 회전을 스프링 암의 회전 값으로 지정
+		GetController()->SetControlRotation(SpringArm->RelativeRotation);
+		SetControlMode(EControlMode::GTA);
+		break;
+	}
 }
 
