@@ -49,6 +49,9 @@ AABCharacter::AABCharacter()
 			// 애니메이션 블루프린트의 클래스 정보를 지정한다
 			// 애님 인스턴스 보고 이 애니메이션 블루프린트를 실행해라고 하는 것
 			GetMesh()->SetAnimInstanceClass(WARRIOR_ANIM.Class);
+
+			// 스켈레탈 메시 컴포넌트에 애니메이션 블루 프린트 클래스 정보를 등록하면
+			// 컴포넌트는 클래스 정보로 인스턴스를 생성, 애니메이션을 관리하도록 한다
 		}
 	}
 
