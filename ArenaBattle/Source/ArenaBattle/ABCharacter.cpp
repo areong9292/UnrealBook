@@ -60,7 +60,10 @@ AABCharacter::AABCharacter()
 
 	// 길이, 회전 변화 속도 지정
 	ArmLengthSpeed = 3.0f;
-	ArmRotationSpeed = 3.0f;
+	ArmRotationSpeed = 10.0f;
+
+	// 점프 높이 조절 - 캐릭터 무브먼트 컴포넌트에 있다
+	GetCharacterMovement()->JumpZVelocity = 800.0f;
 }
 
 // Called when the game starts or when spawned
@@ -187,6 +190,10 @@ void AABCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	// IE_Pressed - 눌렸을 경우 호출
 	PlayerInputComponent->BindAction(TEXT("ViewChange"), EInputEvent::IE_Pressed, this, &AABCharacter::ViewChange);
+
+	// 상속받은 ACharacter에 점프 기능이 이미 있다
+	// 바인딩만 해주면 작동함
+	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACharacter::Jump);
 }
 
 void AABCharacter::UpDown(float NewAxisValue)
