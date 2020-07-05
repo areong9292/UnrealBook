@@ -64,6 +64,8 @@ AABCharacter::AABCharacter()
 
 	// 점프 높이 조절 - 캐릭터 무브먼트 컴포넌트에 있다
 	GetCharacterMovement()->JumpZVelocity = 800.0f;
+
+	IsAttacking = false;
 }
 
 // Called when the game starts or when spawned
@@ -177,6 +179,17 @@ void AABCharacter::Tick(float DeltaTime)
 
 }
 
+void AABCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	ABAnim = Cast<UABAnimInstance>(GetMesh()->GetAnimInstance());
+	ABCHECK(ABAnim != nullptr);
+
+	// 애님 인스턴스(애니메이션 블루프린트)의 OnMontageEnded 델리게이트에 OnAttackMontageEneded를 연결한다
+	// 그러면 몽타쥬 재생 끝난 후 OnAttackMontageEneded 실행 됨
+	ABAnim->OnMontageEnded.AddDynamic(this, &AABCharacter::OnAttackMontageEneded);
+}
+
 // Called to bind functionality to input
 void AABCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -266,11 +279,25 @@ void AABCharacter::ViewChange()
 
 void AABCharacter::Attack()
 {
-	// 메시로부터 애님 인스턴스(애니메이션 블루프린트)를 가져온다
-	auto AnimInstance = Cast<UABAnimInstance>(GetMesh()->GetAnimInstance());
-	if (AnimInstance == nullptr)
+	// 공격 중이면 실행 안한다
+	if (IsAttacking)
+		return;
+
+	if (ABAnim == nullptr)
 		return;
 
 	// 블루프린트한테 몽타주를 플레이하라고 한다
-	AnimInstance->PlayAttackMontage();
+	ABAnim->PlayAttackMontage();
+	
+	IsAttacking = true;
+}
+
+// 연결 된 델리게이트로 인해 공격 애니메이션 재생이 완료되면 호출된다
+void AABCharacter::OnAttackMontageEneded(UAnimMontage * Montage, bool bInterrupted)
+{
+	// 공격 중이었는지 체크
+	ABCHECK(IsAttacking);
+
+	// 공격 중 플래그 끈다
+	IsAttacking = false;
 }

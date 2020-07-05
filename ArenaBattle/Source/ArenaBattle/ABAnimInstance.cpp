@@ -38,10 +38,6 @@ void UABAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 void UABAnimInstance::PlayAttackMontage()
 {
-	// 현재 몽타주가 실행 중이지 않을 경우
-	if (!Montage_IsPlaying(AttackMontage))
-	{
-		// 실행한다
-		Montage_Play(AttackMontage, 1.0f);
-	}
+	// 실행한다
+	Montage_Play(AttackMontage, 1.0f);
 }
