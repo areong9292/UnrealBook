@@ -18,11 +18,19 @@ public:
 	UABAnimInstance();
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
+	void PlayAttackMontage();
+
 private:
+	// 현재 폰의 속도
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
 		float CurrentPawnSpeed;
 
+	// 폰이 공중에 떠 있는지 여부
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
 		bool IsInAir;
+
+	// 몽타주 에셋
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+		UAnimMontage* AttackMontage;
 
 };

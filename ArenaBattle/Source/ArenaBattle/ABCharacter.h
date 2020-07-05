@@ -55,4 +55,5 @@ private:
 	void Turn(float NewAxisValue);
 
 	void ViewChange();
+	void Attack();
 };

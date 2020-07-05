@@ -9,6 +9,13 @@ UABAnimInstance::UABAnimInstance()
 	
 	// 폰이 공중에 있는지 여부
 	IsInAir = false;
+
+	// 몽타주 관련 함수들은 항상 몽타주 에셋을 참조하므로 생성자에서 미리 불러둔다
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> ATTACK_MONTAGE(TEXT("/Game/Book/Animations/SK_Mannequin_Skeleton_Montage.SK_Mannequin_Skeleton_Montage"));
+	if (ATTACK_MONTAGE.Succeeded())
+	{
+		AttackMontage = ATTACK_MONTAGE.Object;
+	}
 }
 
 // 매 틱마다 호출된다
@@ -26,5 +33,15 @@ void UABAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			// 캐릭터 무브먼트 컴포넌트에서 IsFalling - 공중에 떠있는지 여부 를 저장한다
 			IsInAir = Character->GetMovementComponent()->IsFalling();
 		}
+	}
+}
+
+void UABAnimInstance::PlayAttackMontage()
+{
+	// 현재 몽타주가 실행 중이지 않을 경우
+	if (!Montage_IsPlaying(AttackMontage))
+	{
+		// 실행한다
+		Montage_Play(AttackMontage, 1.0f);
 	}
 }

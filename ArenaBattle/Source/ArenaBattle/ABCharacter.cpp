@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ABCharacter.h"
-
+#include "ABAnimInstance.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -194,6 +194,9 @@ void AABCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	// 상속받은 ACharacter에 점프 기능이 이미 있다
 	// 바인딩만 해주면 작동함
 	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACharacter::Jump);
+	
+	// IE_Pressed - 눌렸을 경우 호출
+	PlayerInputComponent->BindAction(TEXT("Attack"), EInputEvent::IE_Pressed, this, &AABCharacter::Attack);
 }
 
 void AABCharacter::UpDown(float NewAxisValue)
@@ -261,3 +264,13 @@ void AABCharacter::ViewChange()
 	}
 }
 
+void AABCharacter::Attack()
+{
+	// 메시로부터 애님 인스턴스(애니메이션 블루프린트)를 가져온다
+	auto AnimInstance = Cast<UABAnimInstance>(GetMesh()->GetAnimInstance());
+	if (AnimInstance == nullptr)
+		return;
+
+	// 블루프린트한테 몽타주를 플레이하라고 한다
+	AnimInstance->PlayAttackMontage();
+}
