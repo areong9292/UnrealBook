@@ -41,3 +41,10 @@ void UABAnimInstance::PlayAttackMontage()
 	// 실행한다
 	Montage_Play(AttackMontage, 1.0f);
 }
+
+// 애니메이션 재생 시 노티파이가 있으면 언리얼은
+// 애님 인스턴스 클래스의 'AnimNotify_노티파이명' 이라는 이름의 멤버 함수를 호출한다
+void UABAnimInstance::AnimNotify_AttackHitCheck()
+{
+	ABLOG_S(Warning);
+}

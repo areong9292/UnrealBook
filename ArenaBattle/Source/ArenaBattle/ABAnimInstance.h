@@ -21,6 +21,10 @@ public:
 	void PlayAttackMontage();
 
 private:
+	UFUNCTION()
+		void AnimNotify_AttackHitCheck();
+
+private:
 	// 현재 폰의 속도
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
 		float CurrentPawnSpeed;
