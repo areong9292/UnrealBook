@@ -66,6 +66,11 @@ AABCharacter::AABCharacter()
 	GetCharacterMovement()->JumpZVelocity = 800.0f;
 
 	IsAttacking = false;
+
+	// 콤보 맥스치 셋팅 후
+	// 콤보 관련 변수들 초기화
+	MaxCombo = 4;
+	AttackEndComboState();
 }
 
 // Called when the game starts or when spawned
@@ -188,6 +193,25 @@ void AABCharacter::PostInitializeComponents()
 	// 애님 인스턴스(애니메이션 블루프린트)의 OnMontageEnded 델리게이트에 OnAttackMontageEneded를 연결한다
 	// 그러면 몽타쥬 재생 끝난 후 OnAttackMontageEneded 실행 됨
 	ABAnim->OnMontageEnded.AddDynamic(this, &AABCharacter::OnAttackMontageEneded);
+
+	// 애님 인스턴스의 OnNextAttackCheck 델리게이트에 로직 등록
+
+	// = 한 섹션이 끝났을 때 내가 공격 요청을 한 경우라면
+	// 다음 콤보로 넘어간다
+	ABAnim->OnNextAttackCheck.AddLambda([this]() -> void {
+		ABLOG(Warning, TEXT("OnNextAttackCheck"));
+		CanNextCombo = false;
+
+		// 콤보 입력이 들어왔을 경우 == 내가 공격 요청을 한 경우
+		if (IsComboInputOn)
+		{
+			// 콤보 값 셋팅 후
+			AttackStartComboState();
+
+			// 현 콤보 상태에서 다음 상태로 넘어간다
+			ABAnim->JumpToAttackMontageSection(CurrentCombo);
+		}
+	});
 }
 
 // Called to bind functionality to input
@@ -279,17 +303,37 @@ void AABCharacter::ViewChange()
 
 void AABCharacter::Attack()
 {
-	// 공격 중이면 실행 안한다
+	// 내가 현재 공격 중인 상태에서 공격 요청이 들어온 경우
 	if (IsAttacking)
-		return;
+	{
+		// 현 콤보 값이 1이상 MaxCombo 이하 인 경우
+		ABCHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
 
-	if (ABAnim == nullptr)
-		return;
+		// 다음 콤보로 갈 수 있으면 콤보 입력이 들어왔다는 플래그를 킨다
+		if(CanNextCombo)
+		{
+			IsComboInputOn = true;
+		}
+	}
+	// 새로운 공격의 시작이면
+	else
+	{
+		// 시작 콤보인지 체크
+		ABCHECK(CurrentCombo == 0);
 
-	// 블루프린트한테 몽타주를 플레이하라고 한다
-	ABAnim->PlayAttackMontage();
-	
-	IsAttacking = true;
+		// 시작 값 셋팅, 다음 콤보 값 가져오기
+		AttackStartComboState();
+		
+		// 현재 가리키는 섹션을 플레이 시킨다 - 처음 꺼
+		ABAnim->PlayAttackMontage();
+
+		// AttackStartComboState 실행으로 가져온 다음 콤보 값으로
+		// 다음 섹션으로 넘어간다
+		ABAnim->JumpToAttackMontageSection(CurrentCombo);
+
+		// 현재 공격 중이라는 플래그 온
+		IsAttacking = true;
+	}
 }
 
 // 연결 된 델리게이트로 인해 공격 애니메이션 재생이 완료되면 호출된다
@@ -298,6 +342,31 @@ void AABCharacter::OnAttackMontageEneded(UAnimMontage * Montage, bool bInterrupt
 	// 공격 중이었는지 체크
 	ABCHECK(IsAttacking);
 
+	// 하나라도 실행했는지 체크
+	ABCHECK(CurrentCombo > 0);
+
 	// 공격 중 플래그 끈다
 	IsAttacking = false;
+
+	// 콤보가 끊겼으므로 콤보 관련 값들 초기화
+	AttackEndComboState();
+}
+
+void AABCharacter::AttackStartComboState()
+{
+	CanNextCombo = true;
+	IsComboInputOn = false;
+
+	// CurrentCombo 값이 0 이상 MaxCombo - 1 이하인지 체크
+	ABCHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 0, MaxCombo - 1));
+
+	// CurrentCombo + 1이 1과 MaxCombo 값 사이에 항상 존재하도록 보정한다
+	CurrentCombo = FMath::Clamp<int32>(CurrentCombo + 1, 1, MaxCombo);
+}
+
+void AABCharacter::AttackEndComboState()
+{
+	IsComboInputOn = false;
+	CanNextCombo = false;
+	CurrentCombo = 0;
 }

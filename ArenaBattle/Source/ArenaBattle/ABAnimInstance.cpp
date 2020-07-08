@@ -42,9 +42,37 @@ void UABAnimInstance::PlayAttackMontage()
 	Montage_Play(AttackMontage, 1.0f);
 }
 
+// 다음 몽타주 섹션으로 넘어가는 메소드
+void UABAnimInstance::JumpToAttackMontageSection(int32 NewSection)
+{
+	// 현재 공격 몽타주가 실행 중인지 체크
+	ABCHECK(Montage_IsPlaying(AttackMontage));
+
+	// 다음 섹션의 이름을 가져와서
+	// 그 이름의 섹션으로 넘어간다
+	Montage_JumpToSection(GetAttackMontageSectionName(NewSection), AttackMontage);
+}
+
 // 애니메이션 재생 시 노티파이가 있으면 언리얼은
 // 애님 인스턴스 클래스의 'AnimNotify_노티파이명' 이라는 이름의 멤버 함수를 호출한다
 void UABAnimInstance::AnimNotify_AttackHitCheck()
 {
-	ABLOG_S(Warning);
+	// Broadcast - 멀티캐스트 델리게이트에 등록된 모든 함수를 호출한다
+	// OnAttackHitCheck에 등록된 모든 함수 호출
+	OnAttackHitCheck.Broadcast();
+}
+
+// 애니메이션 재생 시 노티파이가 있으면 언리얼은
+// 애님 인스턴스 클래스의 'AnimNotify_노티파이명' 이라는 이름의 멤버 함수를 호출한다
+void UABAnimInstance::AnimNotify_NextAttackCheck()
+{
+	// Broadcast - 멀티캐스트 델리게이트에 등록된 모든 함수를 호출한다
+	// OnNextAttackCheck에 등록된 모든 함수 호출
+	OnNextAttackCheck.Broadcast();
+}
+
+FName UABAnimInstance::GetAttackMontageSectionName(int32 Section)
+{
+	ABCHECK(FMath::IsWithinInclusive<int32>(Section, 1, 4), NAME_None);
+	return FName(*FString::Printf(TEXT("Attack%d"), Section));
 }

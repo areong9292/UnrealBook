@@ -6,6 +6,11 @@
 #include "Animation/AnimInstance.h"
 #include "ABAnimInstance.generated.h"
 
+// 반환 값, 인자 값이 없는 함수 유형으로 델리게이트 선언
+// 여러 개의 함수가 등록되도록 멀티캐스트로 선언한다
+DECLARE_MULTICAST_DELEGATE(FOnNextAttackCheckDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnAttackHitCheckDelegate);
+
 /**
  * 
  */
@@ -19,10 +24,21 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 	void PlayAttackMontage();
+	void JumpToAttackMontageSection(int32 NewSection);
+
+public:
+	// 노티파이 체크용 델리게이트 2개
+	FOnNextAttackCheckDelegate OnNextAttackCheck;
+	FOnAttackHitCheckDelegate OnAttackHitCheck;
 
 private:
 	UFUNCTION()
 		void AnimNotify_AttackHitCheck();
+
+	UFUNCTION()
+		void AnimNotify_NextAttackCheck();
+
+	FName GetAttackMontageSectionName(int32 Section);
 
 private:
 	// 현재 폰의 속도
