@@ -71,6 +71,9 @@ AABCharacter::AABCharacter()
 	// 콤보 관련 변수들 초기화
 	MaxCombo = 4;
 	AttackEndComboState();
+
+	// 콜리전 프리셋 셋팅
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("ABCharacter"));
 }
 
 // Called when the game starts or when spawned
