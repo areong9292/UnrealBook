@@ -2,6 +2,7 @@
 
 #include "ABCharacter.h"
 #include "ABAnimInstance.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -73,7 +74,12 @@ AABCharacter::AABCharacter()
 	AttackEndComboState();
 
 	// 콜리전 프리셋 셋팅
+	// 캡슐 컴포넌트가 새로 만든 ABCharacter를 프리셋으로 사용하게 한다
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("ABCharacter"));
+
+	// 공격 범위, 반경을 지정한다
+	AttackRange = 200.0f;
+	AttackRadius = 50.0f;
 }
 
 // Called when the game starts or when spawned
@@ -202,7 +208,7 @@ void AABCharacter::PostInitializeComponents()
 	// = 한 섹션이 끝났을 때 내가 공격 요청을 한 경우라면
 	// 다음 콤보로 넘어간다
 	ABAnim->OnNextAttackCheck.AddLambda([this]() -> void {
-		ABLOG(Warning, TEXT("OnNextAttackCheck"));
+		// ABLOG(Warning, TEXT("OnNextAttackCheck"));
 		CanNextCombo = false;
 
 		// 콤보 입력이 들어왔을 경우 == 내가 공격 요청을 한 경우
@@ -215,6 +221,9 @@ void AABCharacter::PostInitializeComponents()
 			ABAnim->JumpToAttackMontageSection(CurrentCombo);
 		}
 	});
+
+	// 애님 인스턴스의 OnAttackHitCheck 델리게이트에 AttackCheck 로직 등록
+	ABAnim->OnAttackHitCheck.AddUObject(this, &AABCharacter::AttackCheck);
 }
 
 // Called to bind functionality to input
@@ -372,4 +381,56 @@ void AABCharacter::AttackEndComboState()
 	IsComboInputOn = false;
 	CanNextCombo = false;
 	CurrentCombo = 0;
+}
+
+void AABCharacter::AttackCheck()
+{
+	// 공격 범위에 액터가 탐지될 경우 정보를 담게 될 구조체
+	// HitResult의 Actor는 약 포인터(TWeakObjectPtr) 방식으로 선언되어있다
+	// TWeakObjectPtr로 지정된 액터에 접근하려면 IsValid로 사용하려는 액터가 유효한지 먼저 점검하여야 한다
+	// 언리얼에서 스마트 포인터 선언한거
+	FHitResult HitResult;
+
+	FCollisionQueryParams Params(NAME_None, false, this);
+
+	// SweepSingleByChannel - 시작점부터 끝점까지 훑으면서 충돌을 감지한다
+	bool bResult = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		GetActorLocation(),											// 시작점
+		GetActorLocation() + GetActorForwardVector() * AttackRange,	// 끝점
+		FQuat::Identity,											// 탐색에 쓸 도형의 회전
+		ECollisionChannel::ECC_GameTraceChannel2,					// 탐색 채널
+		FCollisionShape::MakeSphere(AttackRadius),					// 탐색에 쓸 도형정보
+		Params);
+
+#if ENABLE_DRAW_DEBUG
+	FVector TraceVec = GetActorForwardVector() * AttackRange;			// 캐릭터 시선 방향 벡터
+	FVector Center = GetActorLocation() + TraceVec * 0.5f;				// 중간 지점
+	float HalfHeight = AttackRange * 0.5f + AttackRadius;				// 중간 높이
+	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();	// 캡슐 Z를 캐릭터 시선 방향으로 향하게 회전
+	FColor DrawColor = bResult ? FColor::Green : FColor::Red;			// 공격 성공 여부에 따라 컬러 지정
+	float DebugLifeTime = 5.0f;											// 5초 뒤 삭제
+
+	DrawDebugCapsule(
+		GetWorld(),
+		Center,
+		HalfHeight,
+		AttackRadius,
+		CapsuleRot,
+		DrawColor,
+		false,
+		DebugLifeTime
+	);
+#endif
+
+	// 충돌이 감지되었고
+	if (bResult)
+	{
+		// 액터 정보가 있으면
+		if (HitResult.Actor.IsValid())
+		{
+			// 충돌된 액터 이름을 로그찍는다
+			ABLOG(Warning, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
+		}
+	}
 }

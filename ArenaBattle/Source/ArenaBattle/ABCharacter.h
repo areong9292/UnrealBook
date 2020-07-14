@@ -69,6 +69,9 @@ private:
 	void AttackStartComboState();
 	void AttackEndComboState();
 
+	// 공격 체크하는 메소드
+	void AttackCheck();
+
 private:
 	// 공격 중인지 여부 저장용 bool 변수
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
@@ -93,4 +96,13 @@ private:
 	// 전방 선언(class)
 	UPROPERTY()
 		class UABAnimInstance* ABAnim;
+
+	// 공격 범위
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+		float AttackRange;
+
+	// 공격 반경
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+		float AttackRadius;
+
 };
