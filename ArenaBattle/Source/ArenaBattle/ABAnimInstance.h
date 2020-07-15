@@ -30,6 +30,7 @@ public:
 	// 노티파이 체크용 델리게이트 2개
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
 	FOnAttackHitCheckDelegate OnAttackHitCheck;
+	void SetDeadAnim() { IsDead = true; }
 
 private:
 	UFUNCTION()
@@ -53,4 +54,7 @@ private:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 		UAnimMontage* AttackMontage;
 
+	// 폰이 공중에 떠 있는지 여부
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
+		bool IsDead;
 };

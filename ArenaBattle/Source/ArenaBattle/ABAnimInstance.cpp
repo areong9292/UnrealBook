@@ -10,6 +10,9 @@ UABAnimInstance::UABAnimInstance()
 	// 폰이 공중에 있는지 여부
 	IsInAir = false;
 
+	// 죽음 여부
+	IsDead = false;
+
 	// 몽타주 관련 함수들은 항상 몽타주 에셋을 참조하므로 생성자에서 미리 불러둔다
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> ATTACK_MONTAGE(TEXT("/Game/Book/Animations/SK_Mannequin_Skeleton_Montage.SK_Mannequin_Skeleton_Montage"));
 	if (ATTACK_MONTAGE.Succeeded())
@@ -24,7 +27,12 @@ void UABAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
 	auto Pawn = TryGetPawnOwner();
-	if (::IsValid(Pawn))
+
+	// 폰이 유효하지 않으면 종료
+	if (!::IsValid(Pawn)) return;
+
+	// 죽은 상태가 아닌 경우 애니메이션을 위한 상태 체크
+	if (!IsDead)
 	{
 		CurrentPawnSpeed = Pawn->GetVelocity().Size();
 		auto Character = Cast<ACharacter>(Pawn);
@@ -38,6 +46,9 @@ void UABAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 void UABAnimInstance::PlayAttackMontage()
 {
+	// 죽은 상태가 아닌 경우에만 애니메이션 재생
+	ABCHECK(!IsDead);
+
 	// 실행한다
 	Montage_Play(AttackMontage, 1.0f);
 }
@@ -45,6 +56,9 @@ void UABAnimInstance::PlayAttackMontage()
 // 다음 몽타주 섹션으로 넘어가는 메소드
 void UABAnimInstance::JumpToAttackMontageSection(int32 NewSection)
 {
+	// 죽은 상태가 아닌 경우에만 애니메이션 재생
+	ABCHECK(!IsDead);
+
 	// 현재 공격 몽타주가 실행 중인지 체크
 	ABCHECK(Montage_IsPlaying(AttackMontage));
 

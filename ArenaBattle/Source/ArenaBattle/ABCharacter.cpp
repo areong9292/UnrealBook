@@ -248,6 +248,28 @@ void AABCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction(TEXT("Attack"), EInputEvent::IE_Pressed, this, &AABCharacter::Attack);
 }
 
+// 공격을 받으면 호출된다
+float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
+{
+	// 부모 클래스인 AActor에 기본적인 데미지 관련 로직이 구현되어 있다
+	// 결과로 받은 데미지를 얻는다
+	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	ABLOG(Warning, TEXT("Actor : %s took Damage : %f"), *GetName(), FinalDamage);
+
+	// 데미지가 들어왔을 경우
+	if (FinalDamage > 0.0f)
+	{
+		// 죽는 애니메이션 재생을 위해 애님 인스턴스(애니메이션 블루프린트)의
+		// IsDead 플래그를 킨다
+		ABAnim->SetDeadAnim();
+
+		// 액터 콜리전을 꺼버려서 충돌 이벤트가 더 이상 발생되지 않게 한다
+		SetActorEnableCollision(false);
+	}
+	return FinalDamage;
+}
+
 void AABCharacter::UpDown(float NewAxisValue)
 {
 	switch (CurrentControlMode)
@@ -431,6 +453,18 @@ void AABCharacter::AttackCheck()
 		{
 			// 충돌된 액터 이름을 로그찍는다
 			ABLOG(Warning, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
+
+			// AActor에는 TakeDamage가 구현되어있다
+			// 공격 받는 액터에 TakeDamage를 override하고
+			// 여기서 호출하면 공격받는 로직을 처리할 수 있다
+
+			// 액터에 데미지를 전달한다
+			FDamageEvent DamageEvent;
+			HitResult.Actor->TakeDamage(
+				50.0f,				// 전달할 데미지의 세기
+				DamageEvent,		// 데미지의 종류 - 여기서는 기본값
+				GetController(),	// 공격 명령을 내린 가해자 - 데미지를 전달하는 주체는 폰을 조정하는 플레이어 컨트롤러다!
+				this);				// 데미지 전달을 위해 사용한 도구 - 데미지 전달을 위해 ABCharacter라는 캐릭터(폰)을 사용한다!
 		}
 	}
 }
