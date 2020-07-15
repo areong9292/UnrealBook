@@ -47,6 +47,9 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+		USkeletalMeshComponent* Weapon = NULL;
+
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 		USpringArmComponent* SpringArm = NULL;
 

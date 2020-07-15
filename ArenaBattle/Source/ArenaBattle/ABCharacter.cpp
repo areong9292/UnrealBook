@@ -80,6 +80,30 @@ AABCharacter::AABCharacter()
 	// 공격 범위, 반경을 지정한다
 	AttackRange = 200.0f;
 	AttackRadius = 50.0f;
+
+
+	// 무기 붙히려 하는 소켓 이름 변수로 저장
+	FName WeaponSocket(TEXT("hand_rSocket"));
+
+	if (GetMesh() == nullptr)
+	{
+		ABLOG(Warning, TEXT("1234"));
+	}
+	// 메시 안에 해당 소켓이 있는지 체크
+	if (GetMesh()->DoesSocketExist(WeaponSocket))
+	{
+		// 무기 에셋 불러온다
+		Weapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WEAPON"));
+		static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_WEAPON(TEXT("/Game/InfinityBladeWeapons/Weapons/Blade/Swords/Blade_BlackKnight/SK_Blade_BlackKnight.SK_Blade_BlackKnight"));
+		if (SK_WEAPON.Succeeded())
+		{
+			Weapon->SetSkeletalMesh(SK_WEAPON.Object);
+		}
+
+		// 무기를 메시에 붙히는데 인자로 소켓 이름(WeaponSocket)을 전달하면
+		// 소켓 위치를 기준으로 트랜스 폼이 자동으로 설정된다
+		Weapon->SetupAttachment(GetMesh(), WeaponSocket);
+	}
 }
 
 // Called when the game starts or when spawned
