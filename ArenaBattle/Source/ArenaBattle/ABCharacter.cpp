@@ -2,6 +2,7 @@
 
 #include "ABCharacter.h"
 #include "ABAnimInstance.h"
+#include "ABWeapon.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -81,14 +82,13 @@ AABCharacter::AABCharacter()
 	AttackRange = 200.0f;
 	AttackRadius = 50.0f;
 
-
+	/*
 	// 무기 붙히려 하는 소켓 이름 변수로 저장
+	// 소켓은 스켈레탈 메시 컴포넌트의 스켈레탈 메시에 있다
+	// GetMesh()->SetSkeletalMesh(SK_CARDBOARD.Object); 로직으로
+	// 먼저 셋팅 후 소켓 있는지 체크해야 한다
 	FName WeaponSocket(TEXT("hand_rSocket"));
 
-	if (GetMesh() == nullptr)
-	{
-		ABLOG(Warning, TEXT("1234"));
-	}
 	// 메시 안에 해당 소켓이 있는지 체크
 	if (GetMesh()->DoesSocketExist(WeaponSocket))
 	{
@@ -104,13 +104,23 @@ AABCharacter::AABCharacter()
 		// 소켓 위치를 기준으로 트랜스 폼이 자동으로 설정된다
 		Weapon->SetupAttachment(GetMesh(), WeaponSocket);
 	}
+	*/
 }
 
 // Called when the game starts or when spawned
 void AABCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	FName WeaponSocket(TEXT("hand_rSocket"));
+
+	// 액터를 월드에 스폰한다
+	auto CurWeapon = GetWorld()->SpawnActor<AABWeapon>(FVector::ZeroVector, FRotator::ZeroRotator);
+	if (CurWeapon != nullptr)
+	{
+		// 그 후 스폰한 액터를 캐릭터의 WeaponSocket을 찾아서 거기에 붙힌다
+		CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
+	}
 }
 
 void AABCharacter::SetControlMode(EControlMode NewControlMode)
