@@ -112,6 +112,7 @@ void AABCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	/*
 	FName WeaponSocket(TEXT("hand_rSocket"));
 
 	// 액터를 월드에 스폰한다
@@ -121,6 +122,7 @@ void AABCharacter::BeginPlay()
 		// 그 후 스폰한 액터를 캐릭터의 WeaponSocket을 찾아서 거기에 붙힌다
 		CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
 	}
+	*/
 }
 
 void AABCharacter::SetControlMode(EControlMode NewControlMode)
@@ -302,6 +304,26 @@ float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEv
 		SetActorEnableCollision(false);
 	}
 	return FinalDamage;
+}
+
+// 무기 착용 가능한지 체크
+bool AABCharacter::CanSetWeapon()
+{
+	return (CurrentWeapon == nullptr);
+}
+
+// 무기 착용
+void AABCharacter::SetWeapon(AABWeapon * NewWeapon)
+{
+	ABCHECK(NewWeapon != nullptr && CurrentWeapon == nullptr);
+	FName WeaponSocket(TEXT("hand_rSocket"));
+	if(NewWeapon != nullptr)
+	{
+		// 무기를 스폰하고 캐릭터가 이 무기를 소유하게 한다
+		NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
+		NewWeapon->SetOwner(this);
+		CurrentWeapon = NewWeapon;
+	}
 }
 
 void AABCharacter::UpDown(float NewAxisValue)
