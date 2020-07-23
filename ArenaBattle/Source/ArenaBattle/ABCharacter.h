@@ -63,6 +63,10 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = Collision)
 		UCameraComponent* Camera = NULL;
 
+	// 전방 선언
+	UPROPERTY(VisibleAnywhere, Category = Stat)
+		class UABCharacterStatComponent* CharacterStat;
+
 private:
 	void UpDown(float NewAxisValue);
 	void LeftRight(float NewAxisValue);

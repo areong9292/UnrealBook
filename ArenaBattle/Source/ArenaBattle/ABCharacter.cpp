@@ -4,6 +4,7 @@
 #include "ABAnimInstance.h"
 #include "ABWeapon.h"
 #include "DrawDebugHelpers.h"
+#include "ABCharacterStatComponent.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -14,6 +15,7 @@ AABCharacter::AABCharacter()
 	// Component 생성
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SPRINGARM"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("CAMERA"));
+	CharacterStat = CreateDefaultSubobject<UABCharacterStatComponent>(TEXT("CHARACTERSTAT"));
 
 	if (SpringArm != NULL && Camera != NULL)
 	{
@@ -260,6 +262,14 @@ void AABCharacter::PostInitializeComponents()
 
 	// 애님 인스턴스의 OnAttackHitCheck 델리게이트에 AttackCheck 로직 등록
 	ABAnim->OnAttackHitCheck.AddUObject(this, &AABCharacter::AttackCheck);
+
+	// 델리게이트 선언
+	// 해당 델리게이트가 호출되면 죽음 처리한다
+	CharacterStat->OnHPIsZero.AddLambda([this]() -> void {
+		ABLOG(Warning, TEXT("OnHPIsZero"));
+		ABAnim->SetDeadAnim();
+		SetActorEnableCollision(false);
+	});
 }
 
 // Called to bind functionality to input
@@ -293,6 +303,7 @@ float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEv
 
 	ABLOG(Warning, TEXT("Actor : %s took Damage : %f"), *GetName(), FinalDamage);
 
+	/*
 	// 데미지가 들어왔을 경우
 	if (FinalDamage > 0.0f)
 	{
@@ -303,6 +314,11 @@ float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEv
 		// 액터 콜리전을 꺼버려서 충돌 이벤트가 더 이상 발생되지 않게 한다
 		SetActorEnableCollision(false);
 	}
+	*/
+
+	// 데미지 처리를 스텟 컴포넌트에서 한다
+	CharacterStat->SetDamage(FinalDamage);
+
 	return FinalDamage;
 }
 
@@ -517,10 +533,10 @@ void AABCharacter::AttackCheck()
 			// 액터에 데미지를 전달한다
 			FDamageEvent DamageEvent;
 			HitResult.Actor->TakeDamage(
-				50.0f,				// 전달할 데미지의 세기
-				DamageEvent,		// 데미지의 종류 - 여기서는 기본값
-				GetController(),	// 공격 명령을 내린 가해자 - 데미지를 전달하는 주체는 폰을 조정하는 플레이어 컨트롤러다!
-				this);				// 데미지 전달을 위해 사용한 도구 - 데미지 전달을 위해 ABCharacter라는 캐릭터(폰)을 사용한다!
+				CharacterStat->GetAttack(),			// 전달할 데미지의 세기 - 데이터에서 불러온 값으로 셋팅한다
+				DamageEvent,						// 데미지의 종류 - 여기서는 기본값
+				GetController(),					// 공격 명령을 내린 가해자 - 데미지를 전달하는 주체는 폰을 조정하는 플레이어 컨트롤러다!
+				this);								// 데미지 전달을 위해 사용한 도구 - 데미지 전달을 위해 ABCharacter라는 캐릭터(폰)을 사용한다!
 		}
 	}
 }
