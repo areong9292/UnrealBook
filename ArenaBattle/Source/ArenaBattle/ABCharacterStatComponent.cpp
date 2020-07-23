@@ -38,7 +38,7 @@ void UABCharacterStatComponent::SetNewLevel(int32 NewLevel)
 	if (CurrentStatData != nullptr)
 	{
 		Level = NewLevel;
-		CurrentHP = CurrentStatData->MaxHP;
+		SetHP(CurrentStatData->MaxHP);
 	}
 	else
 	{
@@ -52,11 +52,27 @@ void UABCharacterStatComponent::SetDamage(float NewDamage)
 {
 	ABCHECK(CurrentStatData != nullptr)
 	{
+		SetHP(FMath::Clamp<float>(CurrentHP - NewDamage, 0.0f, CurrentStatData->MaxHP));
+		/*
 		CurrentHP = FMath::Clamp<float>(CurrentHP - NewDamage, 0.0f, CurrentStatData->MaxHP);
 		if (CurrentHP <= 0.0f)
 		{
 			OnHPIsZero.Broadcast();
-		}
+		}*/
+	}
+}
+
+void UABCharacterStatComponent::SetHP(float NewHP)
+{
+	CurrentHP = NewHP;
+
+	// 값 변경 델리게이트
+	OnHPChanged.Broadcast();
+
+	if (CurrentHP < KINDA_SMALL_NUMBER)
+	{
+		CurrentHP = 0.0f;
+		OnHPIsZero.Broadcast();
 	}
 }
 
@@ -65,4 +81,11 @@ float UABCharacterStatComponent::GetAttack()
 {
 	ABCHECK(CurrentStatData != nullptr, 0.0f);
 	return CurrentStatData->Attack;
+}
+
+// 현재 체력의 비율을 리턴하는 메소드
+float UABCharacterStatComponent::GetHPRatio()
+{
+	ABCHECK(CurrentStatData != nullptr, 0.0f);
+	return (CurrentStatData->MaxHP < KINDA_SMALL_NUMBER) ? 0.0f : (CurrentHP / CurrentStatData->MaxHP);
 }

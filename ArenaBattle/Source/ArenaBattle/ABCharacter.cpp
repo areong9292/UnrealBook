@@ -5,6 +5,8 @@
 #include "ABWeapon.h"
 #include "DrawDebugHelpers.h"
 #include "ABCharacterStatComponent.h"
+#include "Components/WidgetComponent.h"
+#include "ABCharacterWidget.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -16,47 +18,64 @@ AABCharacter::AABCharacter()
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SPRINGARM"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("CAMERA"));
 	CharacterStat = CreateDefaultSubobject<UABCharacterStatComponent>(TEXT("CHARACTERSTAT"));
+	HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBARWIDGET"));
 
-	if (SpringArm != NULL && Camera != NULL)
+	// 다른 컴포넌트들은 캡슐 밑에 붙힌다
+	SpringArm->SetupAttachment(GetCapsuleComponent());
+
+	// 카메라는 스프링 암 밑에 붙힌다
+	Camera->SetupAttachment(SpringArm);
+
+	// UI 메시에 붙힌다
+	HPBarWidget->SetupAttachment(GetMesh());
+
+	// 캡슐은 가운데 기준, 리소스는 발 기준이기 때문에 절반 정도 위치 수정
+	// 회전은 언리얼 엔진과 리소스 만든 좌표계가 달라서 -90도 돌려서 맞춰줌
+	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -88.0f), FRotator(0.0f, -90.0f, 0.0f));
+
+	// 스프링암 길이 400, x축으로 -15도 돌려서 위에서 대각선으로 바라보게 함
+	SpringArm->TargetArmLength = 400.0f;
+	SpringArm->SetRelativeRotation(FRotator(-15.0f, 0.0f, 0.0f));
+
+	// 에셋 경로로 에셋 부르기
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh>
+		SK_CARDBOARD(TEXT("/Game/InfinityBladeWarriors/Character/CompleteCharacters/SK_CharM_Cardboard"));
+
+	// 부르기 성공했으면
+	if (SK_CARDBOARD.Succeeded())
 	{
-		// 다른 컴포넌트들은 캡슐 밑에 붙힌다
-		SpringArm->SetupAttachment(GetCapsuleComponent());
+		// SetSkeletalMesh에 에셋의 포인터(SK_CARDBOARD.Object)를 전달한다
+		GetMesh()->SetSkeletalMesh(SK_CARDBOARD.Object);
+	}
 
-		// 카메라는 스프링 암 밑에 붙힌다
-		Camera->SetupAttachment(SpringArm);
+	// 애니메이션 블루프린트로 애니메이션 실행
+	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+	static ConstructorHelpers::FClassFinder<UAnimInstance> WARRIOR_ANIM(TEXT("/Game/Book/Animations/WarriorAnimBlueprint.WarriorAnimBlueprint_C"));
+	if (WARRIOR_ANIM.Succeeded())
+	{
+		// 스켈레탈 메시 컴포넌트의 애님 인스턴스 속성에
+		// 애니메이션 블루프린트의 클래스 정보를 지정한다
+		// 애님 인스턴스 보고 이 애니메이션 블루프린트를 실행해라고 하는 것
+		GetMesh()->SetAnimInstanceClass(WARRIOR_ANIM.Class);
 
-		// 캡슐은 가운데 기준, 리소스는 발 기준이기 때문에 절반 정도 위치 수정
-		// 회전은 언리얼 엔진과 리소스 만든 좌표계가 달라서 -90도 돌려서 맞춰줌
-		GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -88.0f), FRotator(0.0f, -90.0f, 0.0f));
+		// 스켈레탈 메시 컴포넌트에 애니메이션 블루 프린트 클래스 정보를 등록하면
+		// 컴포넌트는 클래스 정보로 인스턴스를 생성, 애니메이션을 관리하도록 한다
+	}
 
-		// 스프링암 길이 400, x축으로 -15도 돌려서 위에서 대각선으로 바라보게 함
-		SpringArm->TargetArmLength = 400.0f;
-		SpringArm->SetRelativeRotation(FRotator(-15.0f, 0.0f, 0.0f));
+	// 캐릭터 위에 위치하게 함
+	HPBarWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 180.0f));
 
-		// 에셋 경로로 에셋 부르기
-		static ConstructorHelpers::FObjectFinder<USkeletalMesh>
-			SK_CARDBOARD(TEXT("/Game/InfinityBladeWarriors/Character/CompleteCharacters/SK_CharM_Cardboard"));
+	// 항상 플레이어를 바라보게 Screen으로 셋팅
+	HPBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
 
-		// 부르기 성공했으면
-		if (SK_CARDBOARD.Succeeded())
-		{
-			// SetSkeletalMesh에 에셋의 포인터(SK_CARDBOARD.Object)를 전달한다
-			GetMesh()->SetSkeletalMesh(SK_CARDBOARD.Object);
-		}
+	// UI 블루프린트 가져온다
+	static ConstructorHelpers::FClassFinder<UUserWidget> UI_HUD(TEXT("/Game/UI/UI_HPBar.UI_HPBar_C"));
+	if (UI_HUD.Succeeded())
+	{
+		HPBarWidget->SetWidgetClass(UI_HUD.Class);
 
-		// 애니메이션 블루프린트로 애니메이션 실행
-		GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
-		static ConstructorHelpers::FClassFinder<UAnimInstance> WARRIOR_ANIM(TEXT("/Game/Book/Animations/WarriorAnimBlueprint.WarriorAnimBlueprint_C"));
-		if (WARRIOR_ANIM.Succeeded())
-		{
-			// 스켈레탈 메시 컴포넌트의 애님 인스턴스 속성에
-			// 애니메이션 블루프린트의 클래스 정보를 지정한다
-			// 애님 인스턴스 보고 이 애니메이션 블루프린트를 실행해라고 하는 것
-			GetMesh()->SetAnimInstanceClass(WARRIOR_ANIM.Class);
-
-			// 스켈레탈 메시 컴포넌트에 애니메이션 블루 프린트 클래스 정보를 등록하면
-			// 컴포넌트는 클래스 정보로 인스턴스를 생성, 애니메이션을 관리하도록 한다
-		}
+		// UI 사이즈와 동일한 크기로 셋팅
+		HPBarWidget->SetDrawSize(FVector2D(150.0f, 50.0f));
 	}
 
 	// 컨트롤 모드를 디아블로 모드로 변경
@@ -270,6 +289,12 @@ void AABCharacter::PostInitializeComponents()
 		ABAnim->SetDeadAnim();
 		SetActorEnableCollision(false);
 	});
+
+	auto CharacterWidget = Cast<UABCharacterWidget>(HPBarWidget->GetUserWidgetObject());
+	if (CharacterWidget != nullptr)
+	{
+		CharacterWidget->BindCharacterStat(CharacterStat);
+	}
 }
 
 // Called to bind functionality to input

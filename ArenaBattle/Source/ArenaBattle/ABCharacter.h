@@ -55,17 +55,22 @@ public:
 		class AABWeapon* CurrentWeapon;
 	
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
-		USkeletalMeshComponent* Weapon = NULL;
+		USkeletalMeshComponent* Weapon;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-		USpringArmComponent* SpringArm = NULL;
+		USpringArmComponent* SpringArm;
 
 	UPROPERTY(VisibleAnywhere, Category = Collision)
-		UCameraComponent* Camera = NULL;
+		UCameraComponent* Camera;
 
 	// 전방 선언
 	UPROPERTY(VisibleAnywhere, Category = Stat)
 		class UABCharacterStatComponent* CharacterStat;
+
+	// 전방 선언
+	// 액터에 UI 붙힐 수 있게 UWidgetComponent가 있다
+	UPROPERTY(VisibleAnywhere, Category = UI)
+		class UWidgetComponent* HPBarWidget;
 
 private:
 	void UpDown(float NewAxisValue);
