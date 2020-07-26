@@ -7,6 +7,7 @@
 #include "ABCharacterStatComponent.h"
 #include "Components/WidgetComponent.h"
 #include "ABCharacterWidget.h"
+#include "ABAIController.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -126,6 +127,12 @@ AABCharacter::AABCharacter()
 		Weapon->SetupAttachment(GetMesh(), WeaponSocket);
 	}
 	*/
+
+	// ABAIController 인공지능 설정
+	AIControllerClass = AABAIController::StaticClass();
+
+	// 앞으로 레벨에 배치하거나 새롭게 생성되는 캐릭터는 자동으로 ABAIController를 가진다
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 // Called when the game starts or when spawned
