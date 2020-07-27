@@ -19,7 +19,8 @@ public:
 	virtual void Possess(APawn* InPawn) override;
 	
 	static const FName HomePosKey;
-	static const FName PatrolPos;
+	static const FName PatrolPosKey;
+	static const FName TargetKey;
 
 private:
 	UPROPERTY()

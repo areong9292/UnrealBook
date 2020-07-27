@@ -131,6 +131,7 @@ AABCharacter::AABCharacter()
 	// ABAIController 인공지능 설정
 	AIControllerClass = AABAIController::StaticClass();
 
+	// 플레이어가 조종하는 캐릭터를 제외한 모든
 	// 앞으로 레벨에 배치하거나 새롭게 생성되는 캐릭터는 자동으로 ABAIController를 가진다
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
@@ -217,6 +218,13 @@ void AABCharacter::SetControlMode(EControlMode NewControlMode)
 				// 부드럽게 회전 여부
 				GetCharacterMovement()->bUseControllerDesiredRotation = true;
 
+				break;
+
+			case EControlMode::NPC:
+				bUseControllerRotationYaw = false;
+				GetCharacterMovement()->bUseControllerDesiredRotation = false;
+				GetCharacterMovement()->bOrientRotationToMovement = true;
+				GetCharacterMovement()->RotationRate = FRotator(0.0f, 480.0f, 0.0f);
 				break;
 		}
 	}
@@ -352,6 +360,25 @@ float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEv
 	CharacterStat->SetDamage(FinalDamage);
 
 	return FinalDamage;
+}
+
+void AABCharacter::PossessedBy(AController * NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (IsPlayerControlled())
+	{
+		ABLOG(Warning, TEXT("1234Actor : %s"), *GetName());
+		SetControlMode(EControlMode::DIABLO);
+		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+	}
+	// NPC의 경우 회전을 자연스럽게 별도 셋팅한 뒤 속도를 줄인다
+	else
+	{
+		ABLOG(Warning, TEXT("5678Actor : %s"), *GetName());
+		SetControlMode(EControlMode::NPC);
+		GetCharacterMovement()->MaxWalkSpeed = 300.0f;
+	}
 }
 
 // 무기 착용 가능한지 체크

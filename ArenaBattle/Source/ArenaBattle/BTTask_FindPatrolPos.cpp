@@ -39,7 +39,7 @@ EBTNodeResult::Type UBTTask_FindPatrolPos::ExecuteTask(UBehaviorTreeComponent & 
 	if (NavSystem->GetRandomPointInNavigableRadius(Origin, 500.0f, NextPatrol))
 	{
 		// 블랙보드에 뽑아낸 다음 움직일 값을 셋팅한다
-		OwnerComp.GetBlackboardComponent()->SetValueAsVector(AABAIController::PatrolPos, NextPatrol.Location);
+		OwnerComp.GetBlackboardComponent()->SetValueAsVector(AABAIController::PatrolPosKey, NextPatrol.Location);
 
 		// 태스크 성공적으로 수행했다 리턴
 		return EBTNodeResult::Succeeded;
