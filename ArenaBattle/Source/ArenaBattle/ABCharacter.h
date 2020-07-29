@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "ABCharacter.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FOnAttackEndDelegate);
+
 UCLASS()
 class ARENABATTLE_API AABCharacter : public ACharacter
 {
@@ -75,6 +77,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = UI)
 		class UWidgetComponent* HPBarWidget;
 
+	// AI 컨트롤러에서도 공격이 가능하도록 public으로 이동
+	void Attack();
+
+	// 공격 종료 델리게이트
+	FOnAttackEndDelegate OnAttackEnd;
+
 private:
 	void UpDown(float NewAxisValue);
 	void LeftRight(float NewAxisValue);
@@ -82,7 +90,6 @@ private:
 	void Turn(float NewAxisValue);
 
 	void ViewChange();
-	void Attack();
 
 	// 애님 인스턴스는 애니메이션 몽타주 재생이 끝나면 호출되는 OnMontageEnded라는 델리게이트를 제공한다
 	// 이를 등록하기 위해선 UAnimMontage*, bool 인자를 가진 멤버 함수가 있으면 된다

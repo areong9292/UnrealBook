@@ -515,6 +515,9 @@ void AABCharacter::OnAttackMontageEneded(UAnimMontage * Montage, bool bInterrupt
 
 	// 콤보가 끊겼으므로 콤보 관련 값들 초기화
 	AttackEndComboState();
+
+	// 애니메이션 재생 완료 시 델리게이트 실행
+	OnAttackEnd.Broadcast();
 }
 
 void AABCharacter::AttackStartComboState()
