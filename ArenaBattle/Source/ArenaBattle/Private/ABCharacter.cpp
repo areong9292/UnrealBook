@@ -8,6 +8,7 @@
 #include "Components/WidgetComponent.h"
 #include "ABCharacterWidget.h"
 #include "ABAIController.h"
+#include "ABCharacterSetting.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -134,6 +135,15 @@ AABCharacter::AABCharacter()
 	// 플레이어가 조종하는 캐릭터를 제외한 모든
 	// 앞으로 레벨에 배치하거나 새롭게 생성되는 캐릭터는 자동으로 ABAIController를 가진다
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	auto DefaultSetting = GetDefault<UABCharacterSetting>();
+	if (DefaultSetting->CharacterAssets.Num() > 0)
+	{
+		for (auto CharacterAsset : DefaultSetting->CharacterAssets)
+		{
+			ABLOG(Warning, TEXT("Character Asset : %s"), *CharacterAsset.ToString());
+		}
+	}
 }
 
 // Called when the game starts or when spawned
